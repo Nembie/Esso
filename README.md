@@ -6,8 +6,8 @@ A dummy script to brute force protected zip/rar files using a wordlist.
 
 #### ⚙️ Requirements
 
-- [tqdm](https://pypi.org/project/tqdm/) - `pip install tqdm`
-- [zipfile](https://pypi.org/project/zipfile36/) - `pip install zipfile`
+- [tqdm](https://pypi.org/project/tqdm/) - `pip3 install tqdm`
+- [zipfile](https://pypi.org/project/zipfile36/) - `pip3 install zipfile`
 
 #### 🔩 Usage
 
