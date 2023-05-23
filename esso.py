@@ -1,6 +1,7 @@
 import os
 import sys
 import zipfile
+import rarfile
 from tqdm import tqdm
 
 def print_banner():
@@ -17,7 +18,7 @@ def print_banner():
     \  \:\        \  \::/       \  \::/       \  \::/   
      \__\/         \__\/         \__\/         \__\/    
     """)
-    print("Esso - Easy and Simple Zip cracker")
+    print("Esso - Easy and Simple Zip/Rar cracker")
     print("Author: @Nembie")
 
 def print_help():
@@ -27,18 +28,14 @@ def print_help():
     print("-w <wordlist_name> Specify the name of the wordlist to use")
     print("-h                 Print this help")
 
-def extract_file(z_file, password):
+def extract_zip_file(z_file, password):
     try:
         z_file.extractall(pwd=bytes(password, 'utf-8'))
         return password
     except Exception:
         return None
 
-def job(file_name, word_list):
-    # Read all lines from the wordlist at once
-    with open(word_list, mode="r", encoding="latin-1") as pass_file:
-        wordlist_lines = pass_file.readlines()
-
+def zip_worker(file_name, wordlist_lines):
     # Open the protected file only once
     try:
         protected_file = zipfile.ZipFile(file_name)
@@ -49,13 +46,24 @@ def job(file_name, word_list):
     # For each line in the wordlist, try to extract the file
     for line in tqdm(wordlist_lines):
         password = line.strip("\n")
-        guess = extract_file(protected_file, password)
+        guess = extract_zip_file(protected_file, password)
         # If the password is correct, print it and exit
         if guess:
             print("[+] Password = " + password + "\n")
             exit(0)
-
     print("[-] Password not found.")
+
+def rar_worker(rf, wordlist_lines):
+    for line in tqdm(wordlist_lines):
+        password = line.strip("\n")
+        try:
+            rf.setpassword(password)
+            rf.extractall()
+        except rarfile.BadRarFile:
+            pass
+        except:
+            print("[+] Password found: " + password)
+            exit(0)
 
 def main():
     # If parameter -f is used, the file name is the first parameter, otherwise it is asked to the user
@@ -68,7 +76,18 @@ def main():
         print("[-] File or wordlist not found.")
         exit(0)
 
-    job(file_name, word_list)
+    # Read all lines from the wordlist at once
+    with open(word_list, mode="r", encoding="latin-1") as pass_file:
+        wordlist_lines = pass_file.readlines()
+    
+    if zipfile.is_zipfile(file_name):
+        zip_worker(file_name, wordlist_lines)
+    elif rarfile.is_rarfile(file_name):
+        with rarfile.RarFile(file_name) as rf:
+            rar_worker(rf, wordlist_lines)
+    else:
+        print("[-] Invalid file type.")
+        exit(0)
 
 if __name__ == '__main__':
     print_banner()
