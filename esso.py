@@ -3,8 +3,8 @@ import sys
 import zipfile
 import rarfile
 from tqdm import tqdm
-from func.helper import print_banner, print_help
-
+from func.helper import print_banner
+import argparse
 
 def extract_zip_file(z_file, password):
     try:
@@ -12,7 +12,6 @@ def extract_zip_file(z_file, password):
         return password
     except Exception:
         return None
-
 
 def zip_worker(file_name, wordlist_lines):
     try:
@@ -29,7 +28,6 @@ def zip_worker(file_name, wordlist_lines):
             exit(0)
     print("[-] Password not found.")
 
-
 def rar_worker(rf, wordlist_lines):
     for line in tqdm(wordlist_lines):
         password = line.strip("\n")
@@ -42,14 +40,9 @@ def rar_worker(rf, wordlist_lines):
             print("[+] Password found: " + password)
             exit(0)
 
-
-def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "-h":
-        print_help()
-        exit(0)
-
-    file_name = sys.argv[2] if len(sys.argv) > 2 and sys.argv[1] == "-f" else input("Insert the name of the file: ")
-    word_list = sys.argv[4] if len(sys.argv) > 4 and sys.argv[3] == "-w" else input("Insert the name of the wordlist: ")
+def main(args):
+    file_name = args.file
+    word_list = args.wordlist
 
     if not os.path.exists(file_name) or not os.path.exists(word_list):
         print("[-] File or wordlist not found.")
@@ -67,11 +60,15 @@ def main():
         print("[-] Invalid file type.")
         exit(0)
 
-
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Zip/Rar password cracker.")
+    parser.add_argument("-f", dest="file", help="File name", required=True)
+    parser.add_argument("-w", dest="wordlist", help="Wordlist file name", required=True)
+    args = parser.parse_args()
+
     print_banner()
     try:
-        main()
+        main(args)
     except KeyboardInterrupt:
         print("\n[-] Exiting...")
         sys.exit(0)
